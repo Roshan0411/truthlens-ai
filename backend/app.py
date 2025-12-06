@@ -52,24 +52,55 @@ limiter = Limiter(
     storage_uri="memory://"
 )
 
-# Load AI models
+# Lazy loading for AI models (to save memory)
 logger.info("=" * 50)
 logger.info("🚀 TruthLens AI - Starting...")
 logger.info("=" * 50)
 
-try:
-    fake_news_detector = FakeNewsDetector()
-    sentiment_analyzer = SentimentAnalyzer()
-    bias_detector = BiasDetector()
-    fact_checker = FactChecker()
-    source_validator = SourceValidator()
-    image_verifier = ImageVerifier()
-    preprocessor = TextPreprocessor()
-    trust_calculator = TrustScoreCalculator()
-    logger.info("✅ All models loaded successfully!")
-except Exception as e:
-    logger.error(f"❌ Error loading models: {e}")
-    raise
+# Global model instances (will be initialized on first use)
+fake_news_detector = None
+sentiment_analyzer = None
+bias_detector = None
+fact_checker = None
+source_validator = None
+image_verifier = None
+preprocessor = None
+trust_calculator = None
+
+def get_models():
+    """Lazy load models on first use"""
+    global fake_news_detector, sentiment_analyzer, bias_detector
+    global fact_checker, source_validator, image_verifier
+    global preprocessor, trust_calculator
+    
+    if fake_news_detector is None:
+        logger.info("Loading models (first request)...")
+        try:
+            fake_news_detector = FakeNewsDetector()
+            sentiment_analyzer = SentimentAnalyzer()
+            bias_detector = BiasDetector()
+            fact_checker = FactChecker()
+            source_validator = SourceValidator()
+            image_verifier = ImageVerifier()
+            preprocessor = TextPreprocessor()
+            trust_calculator = TrustScoreCalculator()
+            logger.info("✅ All models loaded successfully!")
+        except Exception as e:
+            logger.error(f"❌ Error loading models: {e}")
+            raise
+    
+    return {
+        'fake_news_detector': fake_news_detector,
+        'sentiment_analyzer': sentiment_analyzer,
+        'bias_detector': bias_detector,
+        'fact_checker': fact_checker,
+        'source_validator': source_validator,
+        'image_verifier': image_verifier,
+        'preprocessor': preprocessor,
+        'trust_calculator': trust_calculator
+    }
+
+logger.info("✅ Server initialized (models will load on first request)")
 
 # ==================== ROUTES ====================
 
@@ -211,8 +242,11 @@ def analyze(user=None):
             if today_count >= limit:
                 raise ValidationError(f"Daily limit of {limit} analyses reached")
         
+        # Load models on first request (lazy loading)
+        models = get_models()
+        
         # Clean text
-        cleaned_text = preprocessor.clean_text(text) if text else ""
+        cleaned_text = models['preprocessor'].clean_text(text) if text else ""
         
         # Generate hash
         content_hash = hashlib.md5(f"{cleaned_text}{url}{image_url}".encode()).hexdigest()
@@ -223,12 +257,12 @@ def analyze(user=None):
         # Text analysis
         if cleaned_text and len(cleaned_text) > 20:
             logger.info(f"Analyzing text ({len(cleaned_text)} chars)")
-            results['fake_news_detection'] = fake_news_detector.predict(cleaned_text)
-            results['sentiment_analysis'] = sentiment_analyzer.analyze_emotions(cleaned_text)
-            results['bias_detection'] = bias_detector.detect_bias(cleaned_text)
+            results['fake_news_detection'] = models['fake_news_detector'].predict(cleaned_text)
+            results['sentiment_analysis'] = models['sentiment_analyzer'].analyze_emotions(cleaned_text)
+            results['bias_detection'] = models['bias_detector'].detect_bias(cleaned_text)
             
             if len(cleaned_text) > 100:
-                results['fact_checking'] = fact_checker.verify_claims(cleaned_text)
+                results['fact_checking'] = models['fact_checker'].verify_claims(cleaned_text)
             else:
                 results['fact_checking'] = None
         else:
@@ -240,19 +274,19 @@ def analyze(user=None):
         # Source validation
         if url:
             logger.info(f"Validating source: {url}")
-            results['source_validation'] = source_validator.validate_source(url)
+            results['source_validation'] = models['source_validator'].validate_source(url)
         else:
             results['source_validation'] = None
         
         # Image verification
         if image_url:
             logger.info(f"Verifying image: {image_url}")
-            results['image_verification'] = image_verifier.verify_image(image_url)
+            results['image_verification'] = models['image_verifier'].verify_image(image_url)
         else:
             results['image_verification'] = None
         
         # Calculate trust score
-        trust_score = trust_calculator.calculate(results)
+        trust_score = models['trust_calculator'].calculate(results)
         results['overall_trust_score'] = trust_score
         
         # Save to database
