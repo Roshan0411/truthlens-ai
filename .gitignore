@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# Environment variables
+.env
+backend/.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database
+backend/database/
+*.db
+*.sqlite
+
+# Logs
+*.log
+
+# Model cache
+backend/.cache/
+.cache/
+
+# Node modules (if any)
+node_modules/
