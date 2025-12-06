@@ -75,7 +75,15 @@ def init_db(app):
     with app.app_context():
         # Create database directory if it doesn't exist
         import os
-        os.makedirs('database', exist_ok=True)
+        db_path = app.config['SQLALCHEMY_DATABASE_URI']
+        if db_path.startswith('sqlite:///'):
+            db_file = db_path.replace('sqlite:///', '')
+            db_dir = os.path.dirname(db_file)
+            if db_dir and not os.path.exists(db_dir):
+                try:
+                    os.makedirs(db_dir, exist_ok=True)
+                except:
+                    pass  # Ignore if can't create directory (e.g., on Render)
         db.create_all()
         try:
             print("✅ Database initialized successfully")

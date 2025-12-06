@@ -25,11 +25,11 @@ class Config:
     JWT_EXPIRATION_HOURS = 24
     
     # Database
-    BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-    # Use /tmp directory for SQLite on Render (ephemeral storage)
-    if os.getenv('RENDER'):
+    # Always use /tmp for production (Render, Railway, etc.)
+    if os.getenv('FLASK_ENV') == 'production':
         DB_PATH = '/tmp/truthlens.db'
     else:
+        BASE_DIR = os.path.abspath(os.path.dirname(__file__))
         DB_PATH = os.path.join(os.path.dirname(BASE_DIR), "database", "truthlens.db")
     DATABASE_URL = os.getenv('DATABASE_URL', f'sqlite:///{DB_PATH}')
     SQLALCHEMY_DATABASE_URI = DATABASE_URL
