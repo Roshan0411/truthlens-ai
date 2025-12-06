@@ -26,7 +26,11 @@ class Config:
     
     # Database
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-    DB_PATH = os.path.join(os.path.dirname(BASE_DIR), "database", "truthlens.db")
+    # Use /tmp directory for SQLite on Render (ephemeral storage)
+    if os.getenv('RENDER'):
+        DB_PATH = '/tmp/truthlens.db'
+    else:
+        DB_PATH = os.path.join(os.path.dirname(BASE_DIR), "database", "truthlens.db")
     DATABASE_URL = os.getenv('DATABASE_URL', f'sqlite:///{DB_PATH}')
     SQLALCHEMY_DATABASE_URI = DATABASE_URL
     SQLALCHEMY_TRACK_MODIFICATIONS = False
