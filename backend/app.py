@@ -34,6 +34,10 @@ from services.image_verifier import ImageVerifier
 app = Flask(__name__)
 app.config.from_object(Config)
 
+# Debug: Log database configuration
+logger.info(f"Database URL: {app.config.get('SQLALCHEMY_DATABASE_URI', 'NOT SET')}")
+logger.info(f"Flask ENV: {app.config.get('FLASK_ENV', 'NOT SET')}")
+
 # Enable CORS
 CORS(app, resources={r"/*": {"origins": Config.CORS_ORIGINS}})
 

@@ -26,12 +26,22 @@ class Config:
     
     # Database
     # Always use /tmp for production (Render, Railway, etc.)
-    if os.getenv('FLASK_ENV') == 'production':
+    # Don't use DATABASE_URL env var if it's SQLite - use our logic instead
+    env_db_url = os.getenv('DATABASE_URL', '')
+    
+    if os.getenv('FLASK_ENV') == 'production' or env_db_url.startswith('sqlite:///database/'):
+        # Production or invalid SQLite path - use /tmp
         DB_PATH = '/tmp/truthlens.db'
+        DATABASE_URL = f'sqlite:///{DB_PATH}'
+    elif env_db_url and not env_db_url.startswith('sqlite:///'):
+        # Use provided DATABASE_URL if it's not SQLite (e.g., PostgreSQL)
+        DATABASE_URL = env_db_url
     else:
+        # Local development
         BASE_DIR = os.path.abspath(os.path.dirname(__file__))
         DB_PATH = os.path.join(os.path.dirname(BASE_DIR), "database", "truthlens.db")
-    DATABASE_URL = os.getenv('DATABASE_URL', f'sqlite:///{DB_PATH}')
+        DATABASE_URL = f'sqlite:///{DB_PATH}'
+    
     SQLALCHEMY_DATABASE_URI = DATABASE_URL
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
