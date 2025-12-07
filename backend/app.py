@@ -214,7 +214,7 @@ def login():
         if not user or not user.check_password(password):
             raise ValidationError("Invalid email or password")
         
-        user.last_login = datetime.now(datetime.timezone.utc)
+        user.last_login = datetime.now(timezone.utc)
         db.session.commit()
         
         token = generate_token(user.id)
