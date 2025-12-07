@@ -49,42 +49,54 @@ limiter = Limiter(
     storage_uri="memory://"
 )
 
-# Lazy loading for AI models (to save memory)
+# ==================== MODEL INITIALIZATION ====================
 logger.info("=" * 50)
 logger.info("🚀 TruthLens AI - Starting...")
 logger.info("=" * 50)
 
-# Global model instances (will be initialized on first use)
-fake_news_detector = None
-sentiment_analyzer = None
-bias_detector = None
-fact_checker = None
-source_validator = None
-image_verifier = None
-preprocessor = None
-trust_calculator = None
+# Initialize models at startup
+logger.info("Loading AI models... This may take a few minutes.")
+
+try:
+    fake_news_detector = FakeNewsDetector()
+    logger.info("✅ Fake News Detector loaded")
+    
+    sentiment_analyzer = SentimentAnalyzer()
+    logger.info("✅ Sentiment Analyzer loaded")
+    
+    bias_detector = BiasDetector()
+    logger.info("✅ Bias Detector loaded")
+    
+    fact_checker = FactChecker()
+    logger.info("✅ Fact Checker loaded")
+    
+    source_validator = SourceValidator()
+    logger.info("✅ Source Validator loaded")
+    
+    image_verifier = ImageVerifier()
+    logger.info("✅ Image Verifier loaded")
+    
+    preprocessor = TextPreprocessor()
+    trust_calculator = TrustScoreCalculator()
+    
+    logger.info("✅ All models loaded successfully!")
+    
+except Exception as e:
+    logger.error(f"❌ Error loading models: {e}")
+    # Don't raise - let the app start anyway
+    fake_news_detector = None
+    sentiment_analyzer = None
+    bias_detector = None
+    fact_checker = None
+    source_validator = None
+    image_verifier = None
+    preprocessor = None
+    trust_calculator = None
 
 def get_models():
-    """Lazy load models on first use"""
-    global fake_news_detector, sentiment_analyzer, bias_detector
-    global fact_checker, source_validator, image_verifier
-    global preprocessor, trust_calculator
-    
+    """Return already-loaded models"""
     if fake_news_detector is None:
-        logger.info("Loading models (first request)...")
-        try:
-            fake_news_detector = FakeNewsDetector()
-            sentiment_analyzer = SentimentAnalyzer()
-            bias_detector = BiasDetector()
-            fact_checker = FactChecker()
-            source_validator = SourceValidator()
-            image_verifier = ImageVerifier()
-            preprocessor = TextPreprocessor()
-            trust_calculator = TrustScoreCalculator()
-            logger.info("✅ All models loaded successfully!")
-        except Exception as e:
-            logger.error(f"❌ Error loading models: {e}")
-            raise
+        raise Exception("Models not loaded yet - server still starting up")
     
     return {
         'fake_news_detector': fake_news_detector,
@@ -97,7 +109,7 @@ def get_models():
         'trust_calculator': trust_calculator
     }
 
-logger.info("✅ Server initialized (models will load on first request)")
+logger.info("✅ Server initialized with all models loaded")
 
 # ==================== CORS HANDLER ====================
 
