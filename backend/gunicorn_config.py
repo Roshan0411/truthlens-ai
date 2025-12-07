@@ -1,7 +1,11 @@
 import os
 
 # Bind to the PORT environment variable
-bind = f"0.0.0.0:{os.environ.get('PORT', '5000')}"
+# Render sets PORT, default to 8080 if not set
+port = os.environ.get('PORT', '8080')
+bind = f"0.0.0.0:{port}"
+
+print(f"Gunicorn binding to: {bind}")
 
 # Worker configuration
 workers = 1

@@ -38,15 +38,6 @@ app.config.from_object(Config)
 logger.info(f"Database URL: {app.config.get('SQLALCHEMY_DATABASE_URI', 'NOT SET')}")
 logger.info(f"Flask ENV: {app.config.get('FLASK_ENV', 'NOT SET')}")
 
-# Enable CORS - Allow all origins
-CORS(app, resources={
-    r"/*": {
-        "origins": "*",
-        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"]
-    }
-})
-
 # Initialize database
 init_db(app)
 
@@ -116,9 +107,16 @@ def after_request(response):
     response.headers.add('Access-Control-Allow-Origin', '*')
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    response.headers.add('Access-Control-Max-Age', '3600')
     return response
 
 # ==================== ROUTES ====================
+
+# Handle OPTIONS requests for CORS preflight
+@app.route('/<path:path>', methods=['OPTIONS'])
+def handle_options(path):
+    """Handle CORS preflight requests"""
+    return '', 200
 
 @app.route('/', methods=['GET'])
 def home():
