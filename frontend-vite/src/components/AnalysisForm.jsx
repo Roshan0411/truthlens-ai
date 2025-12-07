@@ -102,17 +102,6 @@ const AnalysisForm = ({ onResults }) => {
       }
     }
   }
-      }
-
-      const response = await analysisAPI.analyze(payload)
-      onResults(response.data)
-    } catch (error) {
-      console.error('Analysis error:', error)
-      alert(error.response?.data?.error || 'Analysis failed. Please try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleExample = (content) => {
     setFormData({ ...formData, [activeTab === 'text' ? 'text' : activeTab === 'url' ? 'url' : 'image_url']: content })
