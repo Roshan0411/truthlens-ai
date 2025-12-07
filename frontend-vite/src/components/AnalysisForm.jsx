@@ -7,6 +7,7 @@ import { analysisAPI } from '../services/api'
 const AnalysisForm = ({ onResults }) => {
   const [activeTab, setActiveTab] = useState('text')
   const [loading, setLoading] = useState(false)
+  const [imagePreview, setImagePreview] = useState(null)
   const [formData, setFormData] = useState({
     text: '',
     url: '',
@@ -48,6 +49,59 @@ const AnalysisForm = ({ onResults }) => {
         text: activeTab === 'text' ? formData.text : '',
         url: activeTab === 'url' ? formData.url : '',
         image_url: activeTab === 'image' ? formData.image_url : ''
+      }
+
+      const response = await analysisAPI.analyze(payload)
+      onResults(response.data)
+    } catch (error) {
+      console.error('Analysis error:', error)
+      alert(error.response?.data?.error || 'Analysis failed. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      // Create preview
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result)
+      }
+      reader.readAsDataURL(file)
+
+      // Upload to imgbb or similar service (for demo, we'll use a placeholder)
+      // In production, you'd upload to a service and get a URL
+      const imageUrl = URL.createObjectURL(file)
+      setFormData({ ...formData, image_url: imageUrl })
+      
+      alert('Note: For image upload, please use an image hosting service and paste the URL, or paste the image directly.')
+    }
+  }
+
+  const handlePasteImage = async (e) => {
+    const items = e.clipboardData?.items
+    if (!items) return
+
+    for (let item of items) {
+      if (item.type.indexOf('image') !== -1) {
+        e.preventDefault()
+        const file = item.getAsFile()
+        
+        // Create preview
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          setImagePreview(reader.result)
+          setFormData({ ...formData, image_url: reader.result })
+        }
+        reader.readAsDataURL(file)
+        
+        alert('Image pasted! Our AI will analyze it for manipulation and authenticity.')
+        break
+      }
+    }
+  }
       }
 
       const response = await analysisAPI.analyze(payload)
@@ -150,15 +204,77 @@ const AnalysisForm = ({ onResults }) => {
               exit={{ opacity: 0, x: 20 }}
             >
               <label className="block mb-2 font-semibold text-gray-700">
-                Enter image URL:
+                Upload or Paste Image:
               </label>
+              
+              {/* Image Preview */}
+              {imagePreview && (
+                <div className="mb-4 relative">
+                  <img 
+                    src={imagePreview} 
+                    alt="Preview" 
+                    className="max-h-64 w-auto mx-auto rounded-lg border-2 border-gray-300"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImagePreview(null)
+                      setFormData({ ...formData, image_url: '' })
+                    }}
+                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-600"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+
+              {/* Paste Area */}
+              <div
+                onPaste={handlePasteImage}
+                className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center mb-4 hover:border-blue-400 transition-colors cursor-pointer bg-gray-50"
+              >
+                <FiImage className="mx-auto text-4xl text-gray-400 mb-2" />
+                <p className="text-gray-600 mb-2">
+                  <strong>Paste an image here</strong> (Ctrl+V / Cmd+V)
+                </p>
+                <p className="text-sm text-gray-500">or</p>
+              </div>
+
+              {/* File Upload */}
+              <div className="mb-4">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  id="imageUpload"
+                />
+                <label
+                  htmlFor="imageUpload"
+                  className="btn-secondary w-full cursor-pointer text-center block"
+                >
+                  📁 Choose Image File
+                </label>
+              </div>
+
+              {/* Or URL Input */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">or enter URL</span>
+                </div>
+              </div>
+
               <input
                 type="url"
                 value={formData.image_url}
                 onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
                 placeholder="https://example.com/image.jpg"
-                className="input-field"
+                className="input-field mt-4"
               />
+              
               <div className="mt-2 text-sm text-gray-600 bg-blue-50 p-3 rounded-lg border-l-4 border-blue-400">
                 💡 <strong>Tip:</strong> We analyze metadata, detect manipulation, and perform reverse search
               </div>
