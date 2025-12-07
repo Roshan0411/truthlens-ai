@@ -38,13 +38,12 @@ app.config.from_object(Config)
 logger.info(f"Database URL: {app.config.get('SQLALCHEMY_DATABASE_URI', 'NOT SET')}")
 logger.info(f"Flask ENV: {app.config.get('FLASK_ENV', 'NOT SET')}")
 
-# Enable CORS
+# Enable CORS - Allow all origins
 CORS(app, resources={
     r"/*": {
-        "origins": ["https://deeplens-ai-2mz3.vercel.app", "http://localhost:3000", "*"],
+        "origins": "*",
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"],
-        "supports_credentials": True
+        "allow_headers": ["Content-Type", "Authorization"]
     }
 })
 
