@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import hashlib
@@ -100,22 +101,23 @@ logger.info("✅ Server initialized (models will load on first request)")
 
 # ==================== CORS HANDLER ====================
 
-@app.after_request
-def after_request(response):
-    """Add CORS headers to all responses"""
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-    response.headers.add('Access-Control-Max-Age', '3600')
-    return response
+CORS(app, resources={
+    r"/*": {
+        "origins": [
+            "https://deeplens-ai-2mz3.vercel.app",
+            "http://localhost:3000",
+            "http://localhost:5173"
+        ],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"],
+        "supports_credentials": True,
+        "max_age": 3600
+    }
+})
 
-# ==================== ROUTES ====================
-
-# Handle OPTIONS requests for CORS preflight
-@app.route('/<path:path>', methods=['OPTIONS'])
-def handle_options(path):
-    """Handle CORS preflight requests"""
-    return '', 200
+# Debug: Log database configuration
+logger.info(f"Database URL: {app.config.get('SQLALCHEMY_DATABASE_URI', 'NOT SET')}")
+logger.info(f"Flask ENV: {app.config.get('FLASK_ENV', 'NOT SET')}")
 
 @app.route('/', methods=['GET'])
 def home():

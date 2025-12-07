@@ -28,3 +28,8 @@ bcrypt>=4.1.2
 
 # Utilities
 validators>=0.22.0
+Flask==3.0.0
+flask-cors==4.0.0
+flask-limiter==3.5.0
+gunicorn==21.2.0
+# ... your other dependencies
